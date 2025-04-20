@@ -33,7 +33,7 @@ export default function HistoryPage() {
         onProfileClick={() => {}}
       />
 
-      <main className="flex-1 overflow-auto bg-gray-50 p-4">
+      <main className="flex-1 overflow-auto bg-gray-50 p-4 pt-20 pb-28">
         <div className="max-w-md mx-auto">
           <h1 className="text-2xl font-bold mb-4">Your Reports</h1>
 

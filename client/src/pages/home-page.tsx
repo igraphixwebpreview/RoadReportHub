@@ -38,7 +38,7 @@ export default function HomePage() {
         onProfileClick={() => {}}
       />
 
-      <main className="flex-1 relative overflow-hidden">
+      <main className="flex-1 relative overflow-hidden pt-16 pb-28">
         <MapView
           incidents={incidents || []}
           onIncidentClick={handleIncidentClick}
@@ -50,17 +50,17 @@ export default function HomePage() {
         </MapView>
 
         {/* Action Buttons */}
-        <div className="absolute bottom-24 right-4 flex flex-col space-y-4">
+        <div className="absolute bottom-36 right-4 flex flex-col space-y-4">
           <Button
             onClick={() => handleReportClick("accident")}
-            className="bg-orange-500 hover:bg-orange-600 text-white rounded-full flex items-center"
+            className="bg-orange-500 hover:bg-orange-600 text-white rounded-full flex items-center shadow-md"
           >
             <Car className="h-5 w-5 mr-2" />
             Report Accident
           </Button>
           <Button
             onClick={() => handleReportClick("roadblock")}
-            className="bg-primary hover:bg-primary/90 text-white rounded-full flex items-center"
+            className="bg-primary hover:bg-primary/90 text-white rounded-full flex items-center shadow-md"
           >
             <HardHat className="h-5 w-5 mr-2" />
             Report Roadblock
