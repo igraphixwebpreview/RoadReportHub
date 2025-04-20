@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Construction, Car } from "lucide-react";
+import { HardHat, Car } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MapView } from "@/components/ui/map-view";
 import { AppBar } from "@/components/ui/app-bar";
@@ -62,7 +62,7 @@ export default function HomePage() {
             onClick={() => handleReportClick("roadblock")}
             className="bg-primary hover:bg-primary/90 text-white rounded-full flex items-center"
           >
-            <Construction className="h-5 w-5 mr-2" />
+            <HardHat className="h-5 w-5 mr-2" />
             Report Roadblock
           </Button>
         </div>

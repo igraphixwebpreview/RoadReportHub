@@ -53,7 +53,7 @@ export function NotificationsModal({ isOpen, onClose }: NotificationsModalProps)
               <div key={notification.id} className="py-4 hover:bg-gray-50 cursor-pointer">
                 <div className="flex">
                   {notification.type === "roadblock" ? (
-                    <Construction className="h-5 w-5 text-primary mr-3 mt-0.5" />
+                    <HardHat className="h-5 w-5 text-primary mr-3 mt-0.5" />
                   ) : notification.type === "accident" ? (
                     <Car className="h-5 w-5 text-orange-500 mr-3 mt-0.5" />
                   ) : (
