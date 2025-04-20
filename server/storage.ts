@@ -5,7 +5,8 @@ import {
   settings, type Settings, type InsertSettings,
   type IncidentType
 } from "@shared/schema";
-import * as session from "express-session";
+import session from "express-session";
+import { Store } from "express-session";
 import createMemoryStore from "memorystore";
 
 const MemoryStore = createMemoryStore(session);
@@ -34,7 +35,7 @@ export interface IStorage {
   createOrUpdateUserSettings(settings: InsertSettings): Promise<Settings>;
 
   // Session store
-  sessionStore: session.SessionStore;
+  sessionStore: Store;
 }
 
 export class MemStorage implements IStorage {
@@ -42,7 +43,7 @@ export class MemStorage implements IStorage {
   private incidents: Map<number, Incident>;
   private verifications: Map<number, Verification>;
   private userSettings: Map<number, Settings>;
-  public sessionStore: session.SessionStore;
+  public sessionStore: Store;
   private currentUserId: number;
   private currentIncidentId: number;
   private currentVerificationId: number;
@@ -179,7 +180,7 @@ import connectPg from "connect-pg-simple";
 const PostgresSessionStore = connectPg(session);
 
 export class DatabaseStorage implements IStorage {
-  public sessionStore: session.SessionStore;
+  public sessionStore: Store;
 
   constructor() {
     this.sessionStore = new PostgresSessionStore({ 
