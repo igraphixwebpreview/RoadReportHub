@@ -24,14 +24,25 @@ export function MapView({ incidents, onIncidentClick, children }: MapViewProps) 
   const { latitude, longitude, isLoading, error } = useGeolocation({ watchPosition: true });
   const [userMarker, setUserMarker] = useState<google.maps.Marker | null>(null);
   
+  // St. Lucia coordinates
+  const stLuciaCoords = {
+    lat: 13.9094,
+    lng: -60.9789
+  };
+  
   // Initialize Google Maps
   useEffect(() => {
     const initializeMap = () => {
-      if (!mapRef.current || !latitude || !longitude) return;
+      if (!mapRef.current) return;
+      
+      // Use user location if available, otherwise default to St. Lucia
+      const center = latitude && longitude 
+        ? { lat: latitude, lng: longitude }
+        : stLuciaCoords;
       
       const mapOptions = {
-        center: { lat: latitude, lng: longitude },
-        zoom: 15,
+        center: center,
+        zoom: 13,
         disableDefaultUI: true,
         styles: [
           {
@@ -45,25 +56,27 @@ export function MapView({ incidents, onIncidentClick, children }: MapViewProps) 
       const newMap = new window.google.maps.Map(mapRef.current, mapOptions);
       setMap(newMap);
       
-      // Create user position marker
-      const marker = new window.google.maps.Marker({
-        position: { lat: latitude, lng: longitude },
-        map: newMap,
-        icon: {
-          path: window.google.maps.SymbolPath.CIRCLE,
-          scale: 10,
-          fillColor: "#2196f3",
-          fillOpacity: 1,
-          strokeColor: "#ffffff",
-          strokeWeight: 2,
-        },
-      });
-      setUserMarker(marker);
+      // Create user position marker if user location is available
+      if (latitude && longitude) {
+        const marker = new window.google.maps.Marker({
+          position: { lat: latitude, lng: longitude },
+          map: newMap,
+          icon: {
+            path: window.google.maps.SymbolPath.CIRCLE,
+            scale: 10,
+            fillColor: "#2196f3",
+            fillOpacity: 1,
+            strokeColor: "#ffffff",
+            strokeWeight: 2,
+          },
+        });
+        setUserMarker(marker);
+      }
     };
     
     // Load Google Maps API
     if (!window.google) {
-      const apiKey = process.env.GOOGLE_MAPS_API_KEY || "";
+      const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "";
       const script = document.createElement("script");
       script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&callback=initMap`;
       script.async = true;
@@ -75,7 +88,8 @@ export function MapView({ incidents, onIncidentClick, children }: MapViewProps) 
         document.head.removeChild(script);
         delete window.initMap;
       };
-    } else if (latitude && longitude) {
+    } else {
+      // Initialize map even without user location
       initializeMap();
     }
   }, [latitude, longitude]);
@@ -150,8 +164,13 @@ export function MapView({ incidents, onIncidentClick, children }: MapViewProps) 
   };
   
   const handleCenterMap = () => {
-    if (map && latitude && longitude) {
-      map.panTo({ lat: latitude, lng: longitude });
+    if (map) {
+      // Center to user location if available, otherwise to St. Lucia
+      if (latitude && longitude) {
+        map.panTo({ lat: latitude, lng: longitude });
+      } else {
+        map.panTo(stLuciaCoords);
+      }
       map.setZoom(15);
     }
   };
