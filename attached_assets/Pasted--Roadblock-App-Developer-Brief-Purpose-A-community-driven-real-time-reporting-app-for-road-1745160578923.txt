@@ -1,0 +1,105 @@
+🚨 Roadblock App – Developer Brief
+
+🧩 Purpose:
+
+A community-driven real-time reporting app for roadblocks and accidents. Users contribute to live road condition updates by reporting roadblocks and accidents directly from the location they’re physically at. The app provides alerts to other drivers approaching these areas.
+
+⸻
+
+🔑 Core Features:
+
+1. User Authentication
+	•	Email/Phone + Password OR social login (Google/Apple)
+	•	Optional guest mode with limited functionality
+
+⸻
+
+2. Main Dashboard (Map View)
+	•	Interactive map showing user’s current location
+	•	Pins displayed for:
+	•	🚧 Roadblocks
+	•	🚗 Accidents
+	•	Each pin includes:
+	•	Time of report
+	•	Image submitted
+	•	Auto-captured location
+	•	Number of confirmations by other users (verified status)
+
+⸻
+
+3. Reporting System
+	•	Two main buttons (visible when user is physically at a location with no active pin nearby):
+	•	🚧 “Report Roadblock”
+	•	🚗 “Report Accident”
+
+Report Flow:
+	1.	User taps on one of the buttons
+	2.	App requests:
+	•	📸 Camera to take a photo (not from gallery)
+	•	📍 Location access to auto-tag the report
+	3.	Submit button becomes active only after:
+	•	A photo is taken
+	•	Location is successfully fetched
+	4.	After submission, the report appears as a pin on the map
+
+⸻
+
+4. Verification System
+	•	Other users at the same location can:
+	•	“👍 Confirm” if the roadblock/accident is still there
+	•	“👎 Dismiss” if it’s cleared (requires photo + location again)
+	•	After multiple confirmations, the report is marked as verified
+	•	After multiple dismissals, the report is marked as cleared and fades from map
+
+⸻
+
+5. Real-Time Alerts
+	•	Background GPS tracking (with battery optimization)
+	•	If user is approaching a reported area:
+	•	App plays a siren alert or custom notification
+	•	Pop-up warning: “Roadblock ahead - [X] meters away”
+
+⸻
+
+6. Notification Settings
+	•	Option to enable/disable:
+	•	Siren sound
+	•	Vibration
+	•	Popup alerts
+	•	Distance threshold setting (e.g. alert me within 200m, 500m, 1km)
+
+⸻
+
+7. Report History
+	•	Each user can view their past reports
+	•	Option to delete or update status if revisiting the area
+
+⸻
+
+8. Admin Panel (Optional)
+	•	Moderate abuse reports
+	•	Filter spam or inappropriate images
+	•	Manually verify or remove reports if necessary
+
+⸻
+
+📱 Technical Requirements
+
+Platform:
+	•	Android & iOS (preferably with Flutter or React Native for cross-platform)
+
+Tech Stack Suggestions:
+	•	Backend: Firebase / Node.js / Supabase
+	•	Database: Firestore / PostgreSQL
+	•	Map Integration: Google Maps SDK
+	•	Push Notifications: Firebase Cloud Messaging (FCM)
+	•	Authentication: Firebase Auth or OAuth
+	•	Image Storage: Firebase Storage / AWS S3
+	•	Geolocation: Device GPS + reverse geocoding (Google Maps API)
+
+⸻
+
+🧪 Optional Enhancements
+	•	Voice reporting: Speech-to-text for describing the issue
+	•	Community voting: Let users vote on accuracy of reports
+	•	Gamification: Reward points for verified helpful reports
