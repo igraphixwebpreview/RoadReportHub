@@ -5,7 +5,7 @@ import {
   settings, type Settings, type InsertSettings,
   type IncidentType
 } from "@shared/schema";
-import session from "express-session";
+import * as session from "express-session";
 import createMemoryStore from "memorystore";
 
 const MemoryStore = createMemoryStore(session);
@@ -172,4 +172,154 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+import { db } from "./db";
+import { and, eq, sql } from "drizzle-orm";
+import connectPg from "connect-pg-simple";
+
+const PostgresSessionStore = connectPg(session);
+
+export class DatabaseStorage implements IStorage {
+  public sessionStore: session.SessionStore;
+
+  constructor() {
+    this.sessionStore = new PostgresSessionStore({ 
+      pool, // Using the pool exported from db.ts
+      createTableIfMissing: true 
+    });
+  }
+
+  // User methods
+  async getUser(id: number): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
+  }
+
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user;
+  }
+
+  async createUser(insertUser: InsertUser): Promise<User> {
+    const [user] = await db.insert(users).values(insertUser).returning();
+    return user;
+  }
+
+  // Incident methods
+  async createIncident(insertIncident: InsertIncident): Promise<Incident> {
+    const [incident] = await db.insert(incidents).values(insertIncident).returning();
+    return incident;
+  }
+
+  async getIncident(id: number): Promise<Incident | undefined> {
+    const [incident] = await db.select().from(incidents).where(eq(incidents.id, id));
+    return incident;
+  }
+
+  async getActiveIncidents(): Promise<Incident[]> {
+    return await db.select().from(incidents).where(eq(incidents.active, true));
+  }
+
+  async getUserIncidents(userId: number): Promise<Incident[]> {
+    return await db.select().from(incidents).where(eq(incidents.userId, userId));
+  }
+
+  async getNearbyIncidents(lat: string, lon: string, radiusInMeters: number): Promise<Incident[]> {
+    // In a real app with PostGIS extension, we would use ST_Distance
+    // For now, return all active incidents as if they're nearby
+    return await db.select().from(incidents).where(eq(incidents.active, true));
+  }
+
+  async updateIncidentStatus(id: number, isActive: boolean): Promise<Incident | undefined> {
+    const [incident] = await db
+      .update(incidents)
+      .set({ active: isActive })
+      .where(eq(incidents.id, id))
+      .returning();
+    return incident;
+  }
+
+  async updateIncidentVerifications(id: number, action: 'confirm' | 'dismiss'): Promise<Incident | undefined> {
+    // First get the current incident to check counts
+    const [incident] = await db.select().from(incidents).where(eq(incidents.id, id));
+    if (!incident) return undefined;
+    
+    const updates: Partial<Incident> = {};
+    
+    if (action === 'confirm') {
+      updates.verifiedCount = incident.verifiedCount + 1;
+    } else if (action === 'dismiss') {
+      updates.dismissedCount = incident.dismissedCount + 1;
+      // If dismissed count is 3 or more, set active to false
+      if (incident.dismissedCount + 1 >= 3) {
+        updates.active = false;
+      }
+    }
+    
+    const [updatedIncident] = await db
+      .update(incidents)
+      .set(updates)
+      .where(eq(incidents.id, id))
+      .returning();
+    
+    return updatedIncident;
+  }
+
+  // Verification methods
+  async createVerification(insertVerification: InsertVerification): Promise<Verification> {
+    const [verification] = await db
+      .insert(verifications)
+      .values(insertVerification)
+      .returning();
+    return verification;
+  }
+
+  async getUserVerificationForIncident(userId: number, incidentId: number): Promise<Verification | undefined> {
+    const [verification] = await db
+      .select()
+      .from(verifications)
+      .where(
+        and(
+          eq(verifications.userId, userId),
+          eq(verifications.incidentId, incidentId)
+        )
+      );
+    return verification;
+  }
+
+  // Settings methods
+  async getUserSettings(userId: number): Promise<Settings | undefined> {
+    const [userSettings] = await db
+      .select()
+      .from(settings)
+      .where(eq(settings.userId, userId));
+    return userSettings;
+  }
+
+  async createOrUpdateUserSettings(insertSettings: InsertSettings): Promise<Settings> {
+    // Check if settings already exist for this user
+    const existingSettings = await this.getUserSettings(insertSettings.userId);
+    
+    if (existingSettings) {
+      // Update existing settings
+      const [updatedSettings] = await db
+        .update(settings)
+        .set(insertSettings)
+        .where(eq(settings.id, existingSettings.id))
+        .returning();
+      return updatedSettings;
+    } else {
+      // Create new settings
+      const [newSettings] = await db
+        .insert(settings)
+        .values(insertSettings)
+        .returning();
+      return newSettings;
+    }
+  }
+}
+
+// Import pool from db.ts
+import { pool } from "./db";
+
+// Use DatabaseStorage instead of MemStorage
+export const storage = new DatabaseStorage();
