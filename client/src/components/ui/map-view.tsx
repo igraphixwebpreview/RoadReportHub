@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { Loader2, Plus, Minus, Navigation2 } from "lucide-react";
 import { useGeolocation } from "@/hooks/use-geolocation";
 import { Incident } from "@shared/schema";
+import { playIncidentNotificationSound } from "@/lib/sound";
 
 interface MapViewProps {
   incidents: Incident[];
@@ -103,16 +104,44 @@ export function MapView({ incidents, onIncidentClick, children }: MapViewProps) 
     }
   }, [latitude, longitude, map, userMarker]);
   
+  // Track the last shown incidents to detect new ones
+  const [lastIncidentIds, setLastIncidentIds] = useState<Set<number>>(new Set());
+  const [infoWindows, setInfoWindows] = useState<Map<number, any>>(new Map());
+  
   // Update incident markers when incidents change
   useEffect(() => {
     if (!map) return;
     
-    // Clear existing markers
+    // Clear existing markers and info windows
     markers.forEach((marker) => {
       marker.setMap(null);
     });
     
+    infoWindows.forEach((infoWindow) => {
+      infoWindow.close();
+    });
+    
     const newMarkers = new Map();
+    const newInfoWindows = new Map();
+    const currentIncidentIds = new Set(incidents.map(incident => incident.id));
+    
+    // Detect new incidents
+    const newIncidents = incidents.filter(incident => !lastIncidentIds.has(incident.id));
+    
+    // Play notification sounds for new incidents
+    newIncidents.forEach(incident => {
+      playIncidentNotificationSound(incident.type as 'roadblock' | 'accident');
+      
+      // Pan to the new incident
+      if (newIncidents.length === 1) {
+        const lat = parseFloat(incident.latitude);
+        const lng = parseFloat(incident.longitude);
+        if (!isNaN(lat) && !isNaN(lng)) {
+          map.panTo({ lat, lng });
+          map.setZoom(16);
+        }
+      }
+    });
     
     // Add markers for each incident
     incidents.forEach((incident) => {
@@ -123,6 +152,7 @@ export function MapView({ incidents, onIncidentClick, children }: MapViewProps) 
       const marker = new window.google.maps.Marker({
         position: { lat, lng },
         map: map,
+        animation: newIncidents.includes(incident) ? window.google.maps.Animation.DROP : null,
         icon: {
           path: window.google.maps.SymbolPath.CIRCLE,
           scale: 10,
@@ -134,21 +164,54 @@ export function MapView({ incidents, onIncidentClick, children }: MapViewProps) 
         title: incident.type === "roadblock" ? "Roadblock" : "Accident",
       });
       
+      // Create info window for each incident
+      const infoWindowContent = `
+        <div style="padding: 8px; font-weight: bold; text-align: center;">
+          ${incident.type === "roadblock" ? "🚧 Roadblock" : "🚨 Accident"} reported
+        </div>
+      `;
+      
+      const infoWindow = new window.google.maps.InfoWindow({
+        content: infoWindowContent,
+        pixelOffset: new window.google.maps.Size(0, -10)
+      });
+      
+      // Display info window for new incidents
+      if (newIncidents.includes(incident)) {
+        infoWindow.open(map, marker);
+        
+        // Auto-close the info window after 10 seconds
+        setTimeout(() => {
+          infoWindow.close();
+        }, 10000);
+      }
+      
+      // Add click event to show info
       marker.addListener("click", () => {
+        // Show the info window if it's closed
+        if (!infoWindow.getMap()) {
+          infoWindow.open(map, marker);
+        }
         onIncidentClick(incident);
       });
       
       newMarkers.set(incident.id, marker);
+      newInfoWindows.set(incident.id, infoWindow);
     });
     
     setMarkers(newMarkers);
+    setInfoWindows(newInfoWindows);
+    setLastIncidentIds(currentIncidentIds);
     
     return () => {
       newMarkers.forEach((marker) => {
         marker.setMap(null);
       });
+      newInfoWindows.forEach((infoWindow) => {
+        infoWindow.close();
+      });
     };
-  }, [incidents, map, onIncidentClick]);
+  }, [incidents, map, onIncidentClick, lastIncidentIds]);
   
   // Map controls
   const handleZoomIn = () => {

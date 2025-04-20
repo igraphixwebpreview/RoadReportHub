@@ -46,22 +46,33 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
       <DialogContent className="sm:max-w-md p-0 overflow-hidden">
         <div className="relative">
           {/* Incident Image */}
-          <img 
-            src={incident.imageUrl} 
-            alt={incident.type} 
-            className="w-full h-48 object-cover"
-          />
+          <div className="relative">
+            <img 
+              src={incident.imageUrl} 
+              alt={incident.type} 
+              className="w-full h-48 object-cover"
+            />
+            
+            {/* Alert banner on top of image */}
+            <div 
+              className={`absolute top-0 left-0 right-0 py-2 text-white font-bold text-center ${
+                isRoadblock ? 'bg-red-600' : 'bg-orange-500'
+              }`}
+            >
+              {isRoadblock ? '🚧 ROADBLOCK REPORTED' : '🚨 ACCIDENT REPORTED'}
+            </div>
+          </div>
           
           <div className="p-4 pt-6">
             <div className="flex justify-between items-start mb-4">
               <div>
                 <div className="flex items-center">
                   {isRoadblock ? (
-                    <HardHat className="h-5 w-5 text-primary mr-1" />
+                    <HardHat className="h-5 w-5 text-red-600 mr-1" />
                   ) : (
                     <Car className="h-5 w-5 text-orange-500 mr-1" />
                   )}
-                  <h2 className="text-xl font-medium">
+                  <h2 className="text-xl font-semibold">
                     {isRoadblock ? "Roadblock" : "Accident"}
                   </h2>
                 </div>
@@ -71,9 +82,13 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
               </div>
               
               {/* Verification Status */}
-              <div className="bg-green-100 text-green-700 px-2 py-1 rounded-full text-sm flex items-center">
+              <div className={`px-2 py-1 rounded-full text-sm flex items-center ${
+                incident.verifiedCount > incident.dismissedCount
+                  ? "bg-green-100 text-green-700"
+                  : "bg-orange-100 text-orange-700"
+              }`}>
                 <Check className="h-4 w-4 mr-1" />
-                Verified ({incident.verifiedCount})
+                {incident.verifiedCount > 0 ? `Verified (${incident.verifiedCount})` : "Unverified"}
               </div>
             </div>
             
