@@ -32,13 +32,9 @@ export default function HomePage() {
   };
 
   return (
-    <div className="flex flex-col h-screen">
-      <AppBar
-        onNotificationsClick={() => setNotificationsOpen(true)}
-        onProfileClick={() => {}}
-      />
-
-      <main className="flex-1 relative overflow-hidden pt-16 pb-28">
+    <div className="h-screen relative">
+      {/* Map as fullscreen background */}
+      <div className="absolute inset-0 z-0">
         <MapView
           incidents={incidents || []}
           onIncidentClick={handleIncidentClick}
@@ -48,26 +44,33 @@ export default function HomePage() {
             alertDistanceMeters={500}
           />
         </MapView>
+      </div>
+      
+      {/* App Bar (floating over map) */}
+      <AppBar
+        onNotificationsClick={() => setNotificationsOpen(true)}
+        onProfileClick={() => {}}
+      />
 
-        {/* Action Buttons */}
-        <div className="absolute bottom-36 right-4 flex flex-col space-y-4">
-          <Button
-            onClick={() => handleReportClick("accident")}
-            className="bg-orange-500 hover:bg-orange-600 text-white rounded-full flex items-center shadow-md"
-          >
-            <Car className="h-5 w-5 mr-2" />
-            Report Accident
-          </Button>
-          <Button
-            onClick={() => handleReportClick("roadblock")}
-            className="bg-primary hover:bg-primary/90 text-white rounded-full flex items-center shadow-md"
-          >
-            <HardHat className="h-5 w-5 mr-2" />
-            Report Roadblock
-          </Button>
-        </div>
-      </main>
+      {/* Action Buttons */}
+      <div className="absolute bottom-28 right-4 flex flex-col space-y-4 z-10">
+        <Button
+          onClick={() => handleReportClick("accident")}
+          className="bg-orange-500 hover:bg-orange-600 text-white rounded-full flex items-center shadow-lg"
+        >
+          <Car className="h-5 w-5 mr-2" />
+          Report Accident
+        </Button>
+        <Button
+          onClick={() => handleReportClick("roadblock")}
+          className="bg-primary hover:bg-primary/90 text-white rounded-full flex items-center shadow-lg"
+        >
+          <HardHat className="h-5 w-5 mr-2" />
+          Report Roadblock
+        </Button>
+      </div>
 
+      {/* Bottom Navigation (floating over map) */}
       <BottomNavigation />
 
       {/* Modals */}

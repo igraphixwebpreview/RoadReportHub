@@ -91,15 +91,18 @@ export default function SettingsPage() {
   if (!user) return null;
 
   return (
-    <div className="flex flex-col h-screen">
+    <div className="h-screen relative">
+      {/* App Bar (floating over content) */}
       <AppBar 
         onNotificationsClick={() => {}}
         onProfileClick={() => {}}
       />
 
-      <main className="flex-1 overflow-auto bg-gray-50 p-4">
-        <div className="max-w-md mx-auto space-y-4">
-          <h1 className="text-2xl font-bold">Settings</h1>
+      {/* Content with scroll */}
+      <div className="absolute inset-0 z-0 bg-gray-50">
+        <div className="overflow-auto h-full w-full p-4 pt-20 pb-28">
+          <div className="max-w-md mx-auto space-y-4">
+            <h1 className="text-2xl font-bold">Settings</h1>
 
           {isSettingsLoading ? (
             <div className="flex justify-center p-8">
@@ -201,8 +204,10 @@ export default function SettingsPage() {
             </>
           )}
         </div>
-      </main>
+        </div>
+      </div>
 
+      {/* Bottom Navigation (floating) */}
       <BottomNavigation />
     </div>
   );
