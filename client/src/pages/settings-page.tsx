@@ -104,106 +104,106 @@ export default function SettingsPage() {
           <div className="max-w-md mx-auto space-y-4">
             <h1 className="text-2xl font-bold">Settings</h1>
 
-          {isSettingsLoading ? (
-            <div className="flex justify-center p-8">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
-          ) : (
-            <>
-              <Card>
-                <CardHeader>
-                  <CardTitle>Notification Settings</CardTitle>
-                  <CardDescription>Configure how you want to be alerted</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <BellRing className="h-5 w-5 text-gray-500" />
-                      <Label htmlFor="popup-alerts">Popup Alerts</Label>
+            {isSettingsLoading ? (
+              <div className="flex justify-center p-8">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : (
+              <>
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Notification Settings</CardTitle>
+                    <CardDescription>Configure how you want to be alerted</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <BellRing className="h-5 w-5 text-gray-500" />
+                        <Label htmlFor="popup-alerts">Popup Alerts</Label>
+                      </div>
+                      <Switch
+                        id="popup-alerts"
+                        checked={localSettings.popupAlertsEnabled}
+                        onCheckedChange={(checked) => handleSettingChange("popupAlertsEnabled", checked)}
+                      />
                     </div>
-                    <Switch
-                      id="popup-alerts"
-                      checked={localSettings.popupAlertsEnabled}
-                      onCheckedChange={(checked) => handleSettingChange("popupAlertsEnabled", checked)}
-                    />
-                  </div>
 
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <Volume2 className="h-5 w-5 text-gray-500" />
-                      <Label htmlFor="sound-alerts">Sound Alerts</Label>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <Volume2 className="h-5 w-5 text-gray-500" />
+                        <Label htmlFor="sound-alerts">Sound Alerts</Label>
+                      </div>
+                      <Switch
+                        id="sound-alerts"
+                        checked={localSettings.sirenEnabled}
+                        onCheckedChange={(checked) => handleSettingChange("sirenEnabled", checked)}
+                      />
                     </div>
-                    <Switch
-                      id="sound-alerts"
-                      checked={localSettings.sirenEnabled}
-                      onCheckedChange={(checked) => handleSettingChange("sirenEnabled", checked)}
-                    />
-                  </div>
 
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <Vibrate className="h-5 w-5 text-gray-500" />
-                      <Label htmlFor="vibration">Vibration</Label>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <Vibrate className="h-5 w-5 text-gray-500" />
+                        <Label htmlFor="vibration">Vibration</Label>
+                      </div>
+                      <Switch
+                        id="vibration"
+                        checked={localSettings.vibrationEnabled}
+                        onCheckedChange={(checked) => handleSettingChange("vibrationEnabled", checked)}
+                      />
                     </div>
-                    <Switch
-                      id="vibration"
-                      checked={localSettings.vibrationEnabled}
-                      onCheckedChange={(checked) => handleSettingChange("vibrationEnabled", checked)}
-                    />
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle>Alert Distance</CardTitle>
-                  <CardDescription>Set how far ahead you want to be alerted</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <Label htmlFor="alert-distance">Distance (meters)</Label>
-                      <span className="text-sm font-medium">
-                        {localSettings.alertDistanceMeters} m
-                      </span>
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Alert Distance</CardTitle>
+                    <CardDescription>Set how far ahead you want to be alerted</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <Label htmlFor="alert-distance">Distance (meters)</Label>
+                        <span className="text-sm font-medium">
+                          {localSettings.alertDistanceMeters} m
+                        </span>
+                      </div>
+                      <Slider
+                        id="alert-distance"
+                        min={100}
+                        max={2000}
+                        step={100}
+                        value={[localSettings.alertDistanceMeters || 500]}
+                        onValueChange={(values) => handleSettingChange("alertDistanceMeters", values[0])}
+                      />
                     </div>
-                    <Slider
-                      id="alert-distance"
-                      min={100}
-                      max={2000}
-                      step={100}
-                      value={[localSettings.alertDistanceMeters || 500]}
-                      onValueChange={(values) => handleSettingChange("alertDistanceMeters", values[0])}
-                    />
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle>Account</CardTitle>
-                  <CardDescription>Manage your account settings</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium">{user.username}</p>
-                      <p className="text-sm text-gray-500">{user.email || "No email provided"}</p>
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Account</CardTitle>
+                    <CardDescription>Manage your account settings</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium">{user.username}</p>
+                        <p className="text-sm text-gray-500">{user.email || "No email provided"}</p>
+                      </div>
+                      <Button variant="destructive" onClick={handleLogout}>
+                        {logoutMutation.isPending ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Logging out...
+                          </>
+                        ) : "Log Out"}
+                      </Button>
                     </div>
-                    <Button variant="destructive" onClick={handleLogout}>
-                      {logoutMutation.isPending ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Logging out...
-                        </>
-                      ) : "Log Out"}
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </>
-          )}
-        </div>
+                  </CardContent>
+                </Card>
+              </>
+            )}
+          </div>
         </div>
       </div>
 
