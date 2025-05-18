@@ -23,14 +23,14 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
 
   const handleConfirm = () => {
     verifyIncidentMutation.mutate({
-      incidentId: incident.id,
+      incidentId: Number(incident.id),
       action: 'confirm'
     });
   };
 
   const handleDismiss = () => {
     verifyIncidentMutation.mutate({
-      incidentId: incident.id,
+      incidentId: Number(incident.id),
       action: 'dismiss'
     });
   };
