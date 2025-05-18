@@ -93,10 +93,7 @@ export default function SettingsPage() {
   return (
     <div className="h-screen relative">
       {/* App Bar (floating over content) */}
-      <AppBar 
-        onNotificationsClick={() => {}}
-        onProfileClick={() => {}}
-      />
+      <AppBar />
 
       {/* Content with scroll */}
       <div className="absolute inset-0 z-0 bg-gray-50">

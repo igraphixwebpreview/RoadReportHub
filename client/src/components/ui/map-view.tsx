@@ -203,7 +203,7 @@ export function MapView({ incidents, onIncidentClick, onMapClick, children }: Ma
       // Add click event to show info
       marker.addListener("click", () => {
         // Show the info window if it's closed
-        if (!infoWindow.getMap?.()) {
+        if (!infoWindow.get('map')) {
           infoWindow.open(map, marker);
         }
         onIncidentClick(incident);
