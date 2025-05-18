@@ -1,6 +1,8 @@
+import 'dotenv/config';
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import WebSocket from 'ws';
 
 const app = express();
 app.use(express.json());
@@ -52,19 +54,28 @@ app.use((req, res, next) => {
   // doesn't interfere with the other routes
   if (app.get("env") === "development") {
     await setupVite(app, server);
+    // Enable live preview (HMR) in development
+    server.on('upgrade', (req, socket, head) => {
+      if (req.url === '/__vite_ws') {
+        const ws = new WebSocket.Server({ noServer: true });
+        ws.handleUpgrade(req, socket, head, (ws) => {
+          server.emit('connection', ws, req);
+        });
+      }
+    });
   } else {
     serveStatic(app);
   }
 
-  // ALWAYS serve the app on port 5000
+  // ALWAYS serve the app on port 5003
   // this serves both the API and the client.
   // It is the only port that is not firewalled.
-  const port = 5000;
+  const PORT = process.env.PORT || 5003;
   server.listen({
-    port,
+    port: PORT,
     host: "0.0.0.0",
     reusePort: true,
   }, () => {
-    log(`serving on port ${port}`);
+    log(`serving on port ${PORT}`);
   });
 })();

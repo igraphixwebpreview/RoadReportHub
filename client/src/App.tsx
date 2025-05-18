@@ -1,21 +1,20 @@
 import { Switch, Route } from "wouter";
-import { queryClient } from "./lib/queryClient";
-import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/hooks/use-auth";
 import { ProtectedRoute } from "@/lib/protected-route";
 import HomePage from "@/pages/home-page";
-import HistoryPage from "@/pages/history-page";
+import TimelinePage from "@/pages/timeline-page";
 import SettingsPage from "@/pages/settings-page";
 import AuthPage from "@/pages/auth-page";
 import NotFound from "@/pages/not-found";
+import { NotificationsProvider } from "@/hooks/use-notifications";
 
 function Router() {
   return (
     <Switch>
       <ProtectedRoute path="/" component={HomePage} />
-      <ProtectedRoute path="/history" component={HistoryPage} />
+      <ProtectedRoute path="/timeline" component={TimelinePage} />
       <ProtectedRoute path="/settings" component={SettingsPage} />
       <Route path="/auth" component={AuthPage} />
       <Route path="/help">
@@ -31,14 +30,14 @@ function Router() {
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
+    <AuthProvider>
+      <NotificationsProvider>
         <TooltipProvider>
           <Toaster />
           <Router />
         </TooltipProvider>
-      </AuthProvider>
-    </QueryClientProvider>
+      </NotificationsProvider>
+    </AuthProvider>
   );
 }
 

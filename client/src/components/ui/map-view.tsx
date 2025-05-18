@@ -1,5 +1,7 @@
+/// <reference types="google.maps" />
+
 import { useEffect, useState, useRef } from "react";
-import { Loader2, Plus, Minus, Navigation2 } from "lucide-react";
+import { Loader2, Plus, Minus, Navigation2, MapPin } from "lucide-react";
 import { useGeolocation } from "@/hooks/use-geolocation";
 import { Incident } from "@shared/schema";
 import { playIncidentNotificationSound } from "@/lib/sound";
@@ -7,23 +9,26 @@ import { playIncidentNotificationSound } from "@/lib/sound";
 interface MapViewProps {
   incidents: Incident[];
   onIncidentClick: (incident: Incident) => void;
+  onMapClick?: (lat: number, lng: number) => void;
   children?: React.ReactNode;
 }
 
 // Google Maps type definitions
 declare global {
   interface Window {
-    google: any;
+    google: typeof google;
     initMap: () => void;
   }
 }
 
-export function MapView({ incidents, onIncidentClick, children }: MapViewProps) {
+export function MapView({ incidents, onIncidentClick, onMapClick, children }: MapViewProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const [map, setMap] = useState<google.maps.Map | null>(null);
-  const [markers, setMarkers] = useState<Map<number, google.maps.Marker>>(new Map());
-  const { latitude, longitude, isLoading, error } = useGeolocation({ watchPosition: true });
   const [userMarker, setUserMarker] = useState<google.maps.Marker | null>(null);
+  const [markers, setMarkers] = useState<Map<string, google.maps.Marker>>(new Map());
+  const [infoWindows, setInfoWindows] = useState<Map<string, google.maps.InfoWindow>>(new Map());
+  const [lastIncidentIds, setLastIncidentIds] = useState<Set<string>>(new Set());
+  const { latitude, longitude, isLoading, error } = useGeolocation({ watchPosition: true });
   
   // St. Lucia coordinates
   const stLuciaCoords = {
@@ -36,13 +41,12 @@ export function MapView({ incidents, onIncidentClick, children }: MapViewProps) 
     const initializeMap = () => {
       if (!mapRef.current) return;
       
-      // Use user location if available, otherwise default to St. Lucia
-      const center = latitude && longitude 
+      const initialPosition = latitude && longitude 
         ? { lat: latitude, lng: longitude }
         : stLuciaCoords;
       
-      const mapOptions = {
-        center: center,
+      const mapOptions: google.maps.MapOptions = {
+        center: initialPosition,
         zoom: 13,
         disableDefaultUI: true,
         styles: [
@@ -52,18 +56,26 @@ export function MapView({ incidents, onIncidentClick, children }: MapViewProps) 
             stylers: [{ visibility: "off" }],
           },
         ],
+        mapTypeId: google.maps.MapTypeId.ROADMAP,
+        mapTypeControl: false,
+        streetViewControl: false,
+        fullscreenControl: false,
+        zoomControl: true,
+        zoomControlOptions: {
+          position: google.maps.ControlPosition.RIGHT_CENTER
+        }
       };
       
-      const newMap = new window.google.maps.Map(mapRef.current, mapOptions);
+      const newMap = new google.maps.Map(mapRef.current, mapOptions);
       setMap(newMap);
       
       // Create user position marker if user location is available
       if (latitude && longitude) {
-        const marker = new window.google.maps.Marker({
+        const marker = new google.maps.Marker({
           position: { lat: latitude, lng: longitude },
           map: newMap,
           icon: {
-            path: window.google.maps.SymbolPath.CIRCLE,
+            path: google.maps.SymbolPath.CIRCLE,
             scale: 10,
             fillColor: "#2196f3",
             fillOpacity: 1,
@@ -72,6 +84,15 @@ export function MapView({ incidents, onIncidentClick, children }: MapViewProps) 
           },
         });
         setUserMarker(marker);
+      }
+      
+      // Add click listener for dropping pins
+      if (onMapClick) {
+        newMap.addListener("click", (e: google.maps.MapMouseEvent) => {
+          if (e.latLng) {
+            onMapClick(e.latLng.lat(), e.latLng.lng());
+          }
+        });
       }
     };
     
@@ -87,13 +108,13 @@ export function MapView({ incidents, onIncidentClick, children }: MapViewProps) 
       
       return () => {
         document.head.removeChild(script);
-        delete window.initMap;
+        window.initMap = () => {};
       };
     } else {
       // Initialize map even without user location
       initializeMap();
     }
-  }, [latitude, longitude]);
+  }, [latitude, longitude, onMapClick]);
   
   // Update user position as location changes
   useEffect(() => {
@@ -104,29 +125,22 @@ export function MapView({ incidents, onIncidentClick, children }: MapViewProps) 
     }
   }, [latitude, longitude, map, userMarker]);
   
-  // Track the last shown incidents to detect new ones
-  const [lastIncidentIds, setLastIncidentIds] = useState<Set<number>>(new Set());
-  const [infoWindows, setInfoWindows] = useState<Map<number, any>>(new Map());
-  
   // Update incident markers when incidents change
   useEffect(() => {
     if (!map) return;
     
-    // Clear existing markers and info windows
-    markers.forEach((marker) => {
-      marker.setMap(null);
-    });
-    
-    infoWindows.forEach((infoWindow) => {
-      infoWindow.close();
-    });
-    
-    const newMarkers = new Map();
-    const newInfoWindows = new Map();
     const currentIncidentIds = new Set(incidents.map(incident => incident.id));
-    
-    // Detect new incidents
     const newIncidents = incidents.filter(incident => !lastIncidentIds.has(incident.id));
+    
+    // Remove old markers
+    markers.forEach((marker, id) => {
+      if (!currentIncidentIds.has(id)) {
+        marker.setMap(null);
+      }
+    });
+    
+    const newMarkers = new Map(markers);
+    const newInfoWindows = new Map(infoWindows);
     
     // Play notification sounds for new incidents
     newIncidents.forEach(incident => {
@@ -149,12 +163,12 @@ export function MapView({ incidents, onIncidentClick, children }: MapViewProps) 
       const lng = parseFloat(incident.longitude);
       if (isNaN(lat) || isNaN(lng)) return;
       
-      const marker = new window.google.maps.Marker({
+      const marker = new google.maps.Marker({
         position: { lat, lng },
         map: map,
-        animation: newIncidents.includes(incident) ? window.google.maps.Animation.DROP : null,
+        animation: newIncidents.includes(incident) ? google.maps.Animation.DROP : null,
         icon: {
-          path: window.google.maps.SymbolPath.CIRCLE,
+          path: google.maps.SymbolPath.CIRCLE,
           scale: 10,
           fillColor: incident.type === "roadblock" ? "#f44336" : "#ff9800",
           fillOpacity: 1,
@@ -167,13 +181,13 @@ export function MapView({ incidents, onIncidentClick, children }: MapViewProps) 
       // Create info window for each incident
       const infoWindowContent = `
         <div style="padding: 8px; font-weight: bold; text-align: center;">
-          ${incident.type === "roadblock" ? "🚧 Roadblock" : "🚨 Accident"} reported
+          ${incident.type === "roadblock" ? "🚧 Roadblock" : "🚨 Accident"}
         </div>
       `;
       
-      const infoWindow = new window.google.maps.InfoWindow({
+      const infoWindow = new google.maps.InfoWindow({
         content: infoWindowContent,
-        pixelOffset: new window.google.maps.Size(0, -10)
+        pixelOffset: new google.maps.Size(0, -10)
       });
       
       // Display info window for new incidents
@@ -189,7 +203,7 @@ export function MapView({ incidents, onIncidentClick, children }: MapViewProps) 
       // Add click event to show info
       marker.addListener("click", () => {
         // Show the info window if it's closed
-        if (!infoWindow.getMap()) {
+        if (!infoWindow.getMap?.()) {
           infoWindow.open(map, marker);
         }
         onIncidentClick(incident);
@@ -216,13 +230,15 @@ export function MapView({ incidents, onIncidentClick, children }: MapViewProps) 
   // Map controls
   const handleZoomIn = () => {
     if (map) {
-      map.setZoom(map.getZoom() + 1);
+      const currentZoom = map.getZoom() ?? 13;
+      map.setZoom(currentZoom + 1);
     }
   };
   
   const handleZoomOut = () => {
     if (map) {
-      map.setZoom(map.getZoom() - 1);
+      const currentZoom = map.getZoom() ?? 13;
+      map.setZoom(currentZoom - 1);
     }
   };
   
@@ -260,19 +276,19 @@ export function MapView({ incidents, onIncidentClick, children }: MapViewProps) 
       <div className="absolute top-4 right-4 flex flex-col space-y-2">
         <button
           onClick={handleZoomIn}
-          className="bg-white rounded-full p-2 shadow-md hover:bg-gray-100"
+          className="bg-white/80 backdrop-blur-md rounded-full p-2.5 shadow-lg hover:bg-white/90 transition-all duration-200 border border-white/20"
         >
           <Plus className="text-gray-700" size={20} />
         </button>
         <button
           onClick={handleZoomOut}
-          className="bg-white rounded-full p-2 shadow-md hover:bg-gray-100"
+          className="bg-white/80 backdrop-blur-md rounded-full p-2.5 shadow-lg hover:bg-white/90 transition-all duration-200 border border-white/20"
         >
           <Minus className="text-gray-700" size={20} />
         </button>
         <button
           onClick={handleCenterMap}
-          className="bg-white rounded-full p-2 shadow-md hover:bg-gray-100"
+          className="bg-white/80 backdrop-blur-md rounded-full p-2.5 shadow-lg hover:bg-white/90 transition-all duration-200 border border-white/20"
         >
           <Navigation2 className="text-gray-700" size={20} />
         </button>

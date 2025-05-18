@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useIncidents } from "@/hooks/use-incidents";
 import { useAuth } from "@/hooks/use-auth";
 import { formatDistanceToNow } from "date-fns";
@@ -10,12 +10,10 @@ import {
 } from "@/components/incident-detail-modal";
 import { Construction, Car, Loader2 } from "lucide-react";
 import { Incident } from "@shared/schema";
-import { useState } from "react";
 
-export default function HistoryPage() {
+export default function TimelinePage() {
   const { user } = useAuth();
-  const { getUserIncidents } = useIncidents();
-  const { data: userIncidents, isLoading } = getUserIncidents();
+  const { incidents, isLoading } = useIncidents();
   const [selectedIncident, setSelectedIncident] = useState<Incident | null>(null);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
 
@@ -29,24 +27,21 @@ export default function HistoryPage() {
   return (
     <div className="h-screen relative">
       {/* App Bar (floating over content) */}
-      <AppBar 
-        onNotificationsClick={() => {}}
-        onProfileClick={() => {}}
-      />
+      <AppBar />
 
       {/* Content with scroll */}
       <div className="absolute inset-0 z-0 bg-gray-50">
         <div className="overflow-auto h-full w-full p-4 pt-20 pb-28">
           <div className="max-w-md mx-auto">
-            <h1 className="text-2xl font-bold mb-4">Your Reports</h1>
+            <h1 className="text-2xl font-bold mb-4">Timeline</h1>
 
             {isLoading ? (
               <div className="flex justify-center p-8">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
               </div>
-            ) : userIncidents && userIncidents.length > 0 ? (
+            ) : incidents && incidents.length > 0 ? (
               <div className="space-y-4">
-                {userIncidents.map((incident) => (
+                {incidents.map((incident) => (
                   <Card 
                     key={incident.id} 
                     className="overflow-hidden cursor-pointer hover:shadow-md transition-shadow"
@@ -70,37 +65,20 @@ export default function HistoryPage() {
                         )}
                         {incident.type === 'roadblock' ? 'Roadblock' : 'Accident'}
                       </div>
-                      
                       <div className={`absolute bottom-0 inset-x-0 py-1 px-2 ${
-                        incident.active 
+                        incident.isActive 
                           ? 'bg-green-500 bg-opacity-80' 
                           : 'bg-gray-500 bg-opacity-80'
                       } text-white text-xs`}>
-                        {incident.active ? 'Active' : 'Cleared'}
+                        {incident.isActive ? 'Active' : 'Cleared'}
                       </div>
                     </div>
-                    
                     <CardContent className="py-3">
                       <div className="flex justify-between items-center">
                         <p className="text-gray-600 text-sm">
                           {formatDistanceToNow(new Date(incident.reportedAt), { addSuffix: true })}
                         </p>
-                        <div className="flex items-center text-sm">
-                          <div className="flex items-center mr-2 text-green-600">
-                            <svg className="h-4 w-4 mr-1" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                              <path d="M7 11L12 16L17 11" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                            </svg>
-                            {incident.verifiedCount}
-                          </div>
-                          <div className="flex items-center text-red-600">
-                            <svg className="h-4 w-4 mr-1" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                              <path d="M7 16L12 11L17 16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                            </svg>
-                            {incident.dismissedCount}
-                          </div>
-                        </div>
                       </div>
-                      
                       <p className="mt-1 text-sm">
                         {incident.locationName || `${incident.latitude}, ${incident.longitude}`}
                       </p>
@@ -118,17 +96,15 @@ export default function HistoryPage() {
                 </svg>
                 <h3 className="text-lg font-medium text-gray-900">No reports yet</h3>
                 <p className="text-gray-500 mt-2">
-                  When you report a roadblock or accident, it will appear here.
+                  When a roadblock or accident is reported, it will appear here.
                 </p>
               </div>
             )}
           </div>
         </div>
       </div>
-
       {/* Bottom Navigation (floating over content) */}
       <BottomNavigation />
-      
       <IncidentDetailModal
         isOpen={detailModalOpen}
         incident={selectedIncident}
@@ -136,4 +112,4 @@ export default function HistoryPage() {
       />
     </div>
   );
-}
+} 

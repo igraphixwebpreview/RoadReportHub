@@ -87,20 +87,22 @@ export function ProximityAlert({ incidents, alertDistanceMeters = 500 }: Proximi
 
   return (
     <div className="fixed top-16 inset-x-0 mx-auto w-11/12 max-w-md z-20 animate-pulse">
-      <div className={`rounded-lg shadow-lg flex items-center p-4 ${
-        nearbyIncident.type === 'roadblock' ? 'bg-primary' : 'bg-orange-500'
+      <div className={`rounded-2xl shadow-lg flex items-center p-4 backdrop-blur-md border ${
+        nearbyIncident.type === 'roadblock' 
+          ? 'bg-primary/90 border-primary/20' 
+          : 'bg-orange-500/90 border-orange-400/20'
       } text-white`}>
         <AlertCircle className="h-5 w-5 mr-2 flex-shrink-0" />
         <div className="flex-1">
           <h3 className="font-bold">
             {nearbyIncident.type === 'roadblock' ? 'Roadblock' : 'Accident'} Ahead!
           </h3>
-          <p className="text-sm">
+          <p className="text-sm opacity-90">
             {distance} meters ahead on {nearbyIncident.locationName || 'current road'}
           </p>
         </div>
         <button 
-          className="p-1"
+          className="p-1.5 rounded-full hover:bg-white/10 transition-all duration-200"
           onClick={() => setVisible(false)}
         >
           <X className="h-5 w-5" />
