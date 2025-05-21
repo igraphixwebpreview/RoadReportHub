@@ -12,15 +12,28 @@ export async function apiRequest(
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
-  const res = await fetch(url, {
-    method,
-    headers: data ? { "Content-Type": "application/json" } : {},
-    body: data ? JSON.stringify(data) : undefined,
-    credentials: "include",
-  });
+  const baseUrl = import.meta.env.VITE_API_URL || '';
+  const fullUrl = `${baseUrl}${url}`;
+  
+  try {
+    const res = await fetch(fullUrl, {
+      method,
+      headers: data ? { "Content-Type": "application/json" } : {},
+      body: data ? JSON.stringify(data) : undefined,
+      credentials: "include",
+    });
 
-  await throwIfResNotOk(res);
-  return res;
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => null);
+      const errorMessage = errorData?.message || res.statusText;
+      throw new Error(`${res.status}: ${errorMessage}`);
+    }
+
+    return res;
+  } catch (error) {
+    console.error('API Request failed:', error);
+    throw error;
+  }
 }
 
 type UnauthorizedBehavior = "returnNull" | "throw";
