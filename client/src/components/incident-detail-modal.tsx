@@ -6,7 +6,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { ThumbsUp, ThumbsDown, MapPin, Check, HardHat, Car } from "lucide-react";
-import { Incident } from "@shared/schema";
+import { Incident } from "@/shared/schema";
 import { useIncidents } from "@/hooks/use-incidents";
 import { formatDistanceToNow } from "date-fns";
 

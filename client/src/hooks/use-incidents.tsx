@@ -1,5 +1,5 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Incident, IncidentType, InsertIncident } from "@shared/schema";
+import { Incident, IncidentType, InsertIncident } from "@/shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 

@@ -9,7 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { BellRing, Volume2, Vibrate, Bell, Loader2 } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { InsertSettings, Settings } from "@shared/schema";
+import { InsertSettings, Settings } from "@/shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 

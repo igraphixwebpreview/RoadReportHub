@@ -20,7 +20,7 @@ export interface InsertUser {
 export const insertUserSchema = z.object({
   username: z.string(),
   password: z.string(),
-  email: z.string().nullable().optional(),
+  email: z.string().optional().default(""),
   avatarUrl: z.string().nullable().optional(),
 });
 

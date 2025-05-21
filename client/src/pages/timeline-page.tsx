@@ -9,7 +9,7 @@ import {
   IncidentDetailModal
 } from "@/components/incident-detail-modal";
 import { Construction, Car, Loader2 } from "lucide-react";
-import { Incident } from "@shared/schema";
+import { Incident } from "@/shared/schema";
 
 export default function TimelinePage() {
   const { user } = useAuth();

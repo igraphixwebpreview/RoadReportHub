@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useGeolocation } from "@/hooks/use-geolocation";
 import { useIncidents } from "@/hooks/use-incidents";
-import { IncidentType } from "@shared/schema";
+import { IncidentType } from "@/shared/schema";
 import { toast } from "react-hot-toast";
 
 export interface ReportIncidentModalProps {

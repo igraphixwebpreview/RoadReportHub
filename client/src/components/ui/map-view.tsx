@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import { Loader2, Plus, Minus, Navigation2, MapPin } from "lucide-react";
 import { useGeolocation } from "@/hooks/use-geolocation";
-import { Incident } from "@shared/schema";
+import { Incident } from "@/shared/schema";
 import { playIncidentNotificationSound } from "@/lib/sound";
 
 interface MapViewProps {

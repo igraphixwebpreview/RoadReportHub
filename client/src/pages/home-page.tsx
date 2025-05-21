@@ -6,7 +6,7 @@ import { BottomNavigation } from "@/components/ui/bottom-navigation";
 import { IncidentDetailModal } from "@/components/incident-detail-modal";
 import { ReportIncidentModal } from "@/components/report-incident-modal";
 import { useIncidents } from "@/hooks/use-incidents";
-import { Incident, IncidentType } from "@shared/schema";
+import { Incident, IncidentType } from "@/shared/schema";
 import { useAuth } from "@/hooks/use-auth";
 import { Loader2, Plus, Car, AlertTriangle } from "lucide-react";
 import {

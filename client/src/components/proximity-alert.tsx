@@ -1,6 +1,6 @@
 import { AlertCircle, X } from "lucide-react";
 import { useState, useEffect } from "react";
-import { Incident } from "@shared/schema";
+import { Incident } from "@/shared/schema";
 import { useGeolocation } from "@/hooks/use-geolocation";
 
 interface ProximityAlertProps {
