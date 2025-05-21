@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertUserSchema } from "@/shared/schema";
-import { useAuth } from "@/hooks/use-auth";
+import { useAuth, LoginData } from "@/hooks/use-auth";
 import {
   Card,
   CardContent,
@@ -66,10 +66,11 @@ export default function AuthPage() {
   });
   
   const onLoginSubmit = (data: LoginFormValues) => {
-    loginMutation.mutate({
+    const loginData: LoginData = {
       username: data.username,
       password: data.password
-    });
+    };
+    loginMutation.mutate(loginData);
   };
   
   const onRegisterSubmit = (data: RegisterFormValues) => {
