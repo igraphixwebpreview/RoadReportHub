@@ -26,13 +26,16 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2, HardHat, Car } from "lucide-react";
 
-// Extend the schema with additional validation
+// Update login schema to accept identifier
 const loginSchema = z.object({
-  username: z.string().min(3, "Username must be at least 3 characters"),
+  identifier: z.string().min(3, "Username or Email must be at least 3 characters"),
   password: z.string().min(6, "Password must be at least 6 characters"),
 });
 
-const registerSchema = insertUserSchema.extend({
+// Update register schema to require username, email, password, confirmPassword
+const registerSchema = z.object({
+  username: z.string().min(3, "Username must be at least 3 characters"),
+  email: z.string().email("Invalid email address"),
   password: z.string().min(6, "Password must be at least 6 characters"),
   confirmPassword: z.string(),
 }).refine(data => data.password === data.confirmPassword, {
@@ -50,7 +53,7 @@ export default function AuthPage() {
   const loginForm = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      username: "",
+      identifier: "",
       password: "",
     },
   });
@@ -59,20 +62,18 @@ export default function AuthPage() {
     resolver: zodResolver(registerSchema),
     defaultValues: {
       username: "",
+      email: "",
       password: "",
       confirmPassword: "",
-      email: "",
     },
   });
   
+  // Update login handler to use identifier
   const onLoginSubmit = (data: LoginFormValues) => {
-    const loginData: LoginData = {
-      username: data.username,
-      password: data.password
-    };
-    loginMutation.mutate(loginData);
+    loginMutation.mutate({ identifier: data.identifier, password: data.password });
   };
   
+  // Update register handler to use username, email, password
   const onRegisterSubmit = (data: RegisterFormValues) => {
     const { confirmPassword, ...registerData } = data;
     registerMutation.mutate(registerData);
@@ -107,12 +108,12 @@ export default function AuthPage() {
                   <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
                     <FormField
                       control={loginForm.control}
-                      name="username"
+                      name="identifier"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Username</FormLabel>
+                          <FormLabel>Username or Email</FormLabel>
                           <FormControl>
-                            <Input placeholder="Enter your username" {...field} />
+                            <Input placeholder="Enter your username or email" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -173,7 +174,7 @@ export default function AuthPage() {
                       name="email"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Email (Optional)</FormLabel>
+                          <FormLabel>Email</FormLabel>
                           <FormControl>
                             <Input type="email" placeholder="Enter your email" {...field} />
                           </FormControl>

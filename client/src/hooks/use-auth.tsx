@@ -1,73 +1,62 @@
-import { createContext, ReactNode, useContext } from "react";
-import {
-  useQuery,
-  useMutation,
-  UseMutationResult,
-} from "@tanstack/react-query";
-import { insertUserSchema, User as SelectUser, InsertUser } from "@/shared/schema";
-import { getQueryFn, apiRequest, queryClient } from "../lib/queryClient";
+import { createContext, ReactNode, useContext, useState } from "react";
+import { useMutation, UseMutationResult } from "@tanstack/react-query";
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, User as FirebaseUser } from "firebase/auth";
+import { setDoc, doc, getDoc, collection, query, where, getDocs } from "firebase/firestore";
+import { auth, db } from "@/lib/firebase";
 import { useToast } from "@/hooks/use-toast";
 
-type AuthContextType = {
-  user: SelectUser | null;
-  isLoading: boolean;
-  error: Error | null;
-  loginMutation: UseMutationResult<SelectUser, Error, LoginData>;
-  logoutMutation: UseMutationResult<void, Error, void>;
-  registerMutation: UseMutationResult<SelectUser, Error, InsertUser>;
+export type RegisterData = {
+  username: string;
+  email: string;
+  password: string;
 };
 
-export type LoginData = Pick<InsertUser, "username" | "password">;
+export type LoginData = {
+  identifier: string; // username or email
+  password: string;
+};
+
+type AuthContextType = {
+  user: FirebaseUser | null;
+  isLoading: boolean;
+  error: Error | null;
+  loginMutation: UseMutationResult<FirebaseUser, Error, LoginData>;
+  logoutMutation: UseMutationResult<void, Error, void>;
+  registerMutation: UseMutationResult<FirebaseUser, Error, RegisterData>;
+};
 
 export const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
-  const {
-    data: user,
-    error,
-    isLoading,
-  } = useQuery<SelectUser | null, Error>({
-    queryKey: ["/api/user"],
-    queryFn: getQueryFn({ on401: "returnNull" }),
-  });
+  const [user, setUser] = useState<FirebaseUser | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
 
-  const loginMutation = useMutation({
-    mutationFn: async (credentials: LoginData) => {
-      const res = await apiRequest("POST", "/api/login", credentials);
-      return await res.json();
-    },
-    onSuccess: (user: SelectUser) => {
-      queryClient.setQueryData(["/api/user"], user);
-      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
-      toast({
-        title: "Login successful",
-        description: `Welcome back, ${user.username}!`,
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Login failed",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-
+  // Register
   const registerMutation = useMutation({
-    mutationFn: async (credentials: InsertUser) => {
-      const res = await apiRequest("POST", "/api/register", credentials);
-      return await res.json();
+    mutationFn: async ({ username, email, password }: RegisterData) => {
+      setIsLoading(true);
+      // 1. Create user in Firebase Auth
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      // 2. Store username in Firestore (users collection, doc id = uid)
+      await setDoc(doc(db, "users", userCredential.user.uid), {
+        username,
+        email,
+      });
+      setUser(userCredential.user);
+      setIsLoading(false);
+      return userCredential.user;
     },
-    onSuccess: (user: SelectUser) => {
-      queryClient.setQueryData(["/api/user"], user);
-      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+    onSuccess: (user: FirebaseUser) => {
       toast({
         title: "Registration successful",
-        description: `Welcome to RoadBlock, ${user.username}!`,
+        description: `Welcome to RoadBlock, ${user.email}!`,
       });
     },
     onError: (error: Error) => {
+      setIsLoading(false);
+      setError(error);
       toast({
         title: "Registration failed",
         description: error.message,
@@ -76,13 +65,53 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
   });
 
+  // Login
+  const loginMutation = useMutation({
+    mutationFn: async ({ identifier, password }: LoginData) => {
+      setIsLoading(true);
+      let email = identifier;
+      // If identifier is not an email, look up by username
+      if (!identifier.includes("@")) {
+        // Query Firestore for user with this username
+        const q = query(collection(db, "users"), where("username", "==", identifier));
+        const querySnapshot = await getDocs(q);
+        if (querySnapshot.empty) {
+          throw new Error("No user found with that username");
+        }
+        // Assume usernames are unique, get the first match
+        const userDoc = querySnapshot.docs[0];
+        email = userDoc.data().email;
+      }
+      // Sign in with email and password
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      setUser(userCredential.user);
+      setIsLoading(false);
+      return userCredential.user;
+    },
+    onSuccess: (user: FirebaseUser) => {
+      toast({
+        title: "Login successful",
+        description: `Welcome back, ${user.email}!`,
+      });
+    },
+    onError: (error: Error) => {
+      setIsLoading(false);
+      setError(error);
+      toast({
+        title: "Login failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Logout
   const logoutMutation = useMutation({
     mutationFn: async () => {
-      await apiRequest("POST", "/api/logout");
+      await signOut(auth);
+      setUser(null);
     },
     onSuccess: () => {
-      queryClient.setQueryData(["/api/user"], null);
-      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
       toast({
         title: "Logged out",
         description: "You have been successfully logged out.",
@@ -100,7 +129,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   return (
     <AuthContext.Provider
       value={{
-        user: user ?? null,
+        user,
         isLoading,
         error,
         loginMutation,
