@@ -12,10 +12,13 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { InsertSettings, Settings } from "@/shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
 export default function SettingsPage() {
   const { user, logoutMutation } = useAuth();
   const { toast } = useToast();
+  const [username, setUsername] = useState<string | null>(null);
 
   // Fetch user settings
   const { 
@@ -45,6 +48,18 @@ export default function SettingsPage() {
       });
     }
   }, [settings]);
+
+  useEffect(() => {
+    const fetchUsername = async () => {
+      if (user) {
+        const userDoc = await getDoc(doc(db, "users", user.uid));
+        if (userDoc.exists()) {
+          setUsername(userDoc.data().username);
+        }
+      }
+    };
+    fetchUsername();
+  }, [user]);
 
   // Settings update mutation
   const updateSettingsMutation = useMutation({
@@ -184,7 +199,7 @@ export default function SettingsPage() {
                   <CardContent className="space-y-4">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="font-medium">{user.username}</p>
+                        <p className="font-medium">{username ?? "Loading..."}</p>
                         <p className="text-sm text-gray-500">{user.email || "No email provided"}</p>
                       </div>
                       <Button variant="destructive" onClick={handleLogout}>
