@@ -3,7 +3,7 @@ import { Redirect } from "wouter";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { insertUserSchema } from "@shared/schema";
+import { insertUserSchema } from "@/shared/schema";
 import { useAuth } from "@/hooks/use-auth";
 import {
   Card,
@@ -65,7 +65,7 @@ export default function AuthPage() {
     },
   });
   
-  const onLoginSubmit = (data: any) => {
+  const onLoginSubmit = (data: LoginFormValues) => {
     loginMutation.mutate(data);
   };
   
